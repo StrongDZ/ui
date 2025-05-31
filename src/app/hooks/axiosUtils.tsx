@@ -1,7 +1,7 @@
 // utils/axiosHelper.js
 import axios from "axios";
 
-export const axiosRequest = async ({ url = "", method = "GET", data = null, params = null as Record<string, any> | null, headers = {} }) => {
+export const axiosRequest = async ({ url = "", method = "GET", data = null, params = null as Record<string, unknown> | null, headers = {} }) => {
     const finalHeaders = {
         "Content-Type": "application/json",
         ...headers,
@@ -18,7 +18,7 @@ export const axiosRequest = async ({ url = "", method = "GET", data = null, para
         params,
         headers: finalHeaders,
     });
-    
+
     try {
         const response = await axios({
             url,

@@ -2,14 +2,14 @@
 
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
-import { useAccount, useDisconnect, useNetwork } from "@starknet-react/core";
+import { useAccount } from "@starknet-react/core";
 import { axiosRequest } from "../hooks/axiosUtils";
 import { getShortAddress } from "../utils/getShortAddress";
 import { Copy } from "lucide-react";
 import Balance from "../components/balance";
-import { RpcProvider, Contract, constants, num, Abi, CallData, cairo, uint256 } from "starknet";
-import GameList from "../components/GameList";
-import { STARKNET_NODE_URL, FACEIT_CONTRACT, ERC20_CONTRACT, ConfigBackend, API_BASE_URL } from "../config";
+import { RpcProvider, Contract, constants, num, CallData, uint256 } from "starknet";
+import GameList, { GameInfo } from "../components/GameList";
+import { STARKNET_NODE_URL, FACEIT_CONTRACT, ERC20_CONTRACT, API_BASE_URL } from "../config";
 
 export default function FundPage() {
     //const { address } = useAccount();
@@ -31,15 +31,12 @@ export default function FundPage() {
     const maxQtyGasAuthorized = 180000;
     const maxPriceAuthorizeForOneGas = 10 ** 15;
 
-    const { address, account, isConnected } = useAccount();
-    const { disconnect } = useDisconnect();
-    const { chain } = useNetwork();
+    const { address, account } = useAccount();
 
     const rpcProvider = new RpcProvider({
         nodeUrl: STARKNET_NODE_URL,
     });
 
-    const [abi, setAbi] = useState<Abi | undefined>();
     const [faceit, setFaceit] = useState<Contract | null>(null);
     const [token, setToken] = useState<Contract | null>(null);
 
@@ -56,7 +53,6 @@ export default function FundPage() {
             const faceitContract = new Contract(faceitAbi, contractAddress, rpcProvider);
             faceitContract.connect(account);
 
-            setAbi(faceitAbi as Abi);
             setFaceit(faceitContract);
 
             const erc20_address = ERC20_CONTRACT;
@@ -142,8 +138,6 @@ export default function FundPage() {
                 const gameId = formData.gameId;
                 const amount = formData.amount;
 
-                const amountUint256 = uint256.bnToUint256(BigInt(amount));
-                const gameIdUint256 = uint256.bnToUint256(BigInt(gameId));
 
                 if (!faceit) {
                     console.error("Faceit contract is not loaded yet.");
@@ -173,10 +167,9 @@ export default function FundPage() {
                     },
                 });
                 console.log("tx: ", txH);
-                const txR = await rpcProvider.waitForTransaction(txH);
                 setSubmitStatus("success");
             }
-        } catch (e) {
+        } catch {
             setSubmitStatus("fail");
         }
         setTimeout(() => {
@@ -191,8 +184,8 @@ export default function FundPage() {
     };
 
     // Helper to get all games (for idGame uniqueness check)
-    async function fetchAllGames() {
-        let allGames: any[] = [];
+    async function fetchAllGames(): Promise<GameInfo[]> {
+        let allGames: GameInfo[] = [];
         let page = 1;
         const PAGE_SIZE = 100;
         while (true) {
@@ -212,14 +205,14 @@ export default function FundPage() {
         return allGames;
     }
 
-    const handleRegisterGame = async (e: React.FormEvent) => {
+    const handleRegisterGame = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setIsRegisteringGame(true);
         setRegisterGameResult(null);
         // Generate unique idGame
         let idGame: string;
-        let allGames = await fetchAllGames();
-        const existingIds = new Set(allGames.map((g: any) => g.idGame));
+        const allGames = await fetchAllGames();
+        const existingIds = new Set(allGames.map((g: GameInfo) => g.idGame));
         do {
             idGame = Math.floor(Math.random() * 1000000).toString();
         } while (existingIds.has(idGame));
@@ -260,7 +253,7 @@ export default function FundPage() {
                 },
             });
             console.log("tx: ", txH);
-            const txR = await rpcProvider.waitForTransaction(txH);
+            await rpcProvider.waitForTransaction(txH);
 
             const res = await axiosRequest({
                 url: `${API_BASE_URL}/game/register`,
@@ -273,7 +266,7 @@ export default function FundPage() {
             } else {
                 setRegisterGameResult("error");
             }
-        } catch (e) {
+        } catch {
             setRegisterGameResult("error");
         }
         setIsRegisteringGame(false);

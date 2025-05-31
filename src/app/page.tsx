@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { Copy, LogOut } from "lucide-react";
-import { useAccount, useDisconnect, useNetwork } from "@starknet-react/core";
+import { useAccount, useDisconnect } from "@starknet-react/core";
 import { WalletConnectorModal } from "./components/wallet";
 import { getShortAddress } from "./utils/getShortAddress";
 
-import { RpcProvider, Contract, constants, num, Abi, CallData, cairo } from "starknet";
+import { RpcProvider, Contract, constants, num, CallData, cairo } from "starknet";
 import Balance from "./components/balance";
 import Link from "next/link";
 import { axiosRequest } from "./hooks/axiosUtils";
@@ -22,7 +22,6 @@ interface DepositFormProps {
 
 function DepositForm({ amount, setAmount, onConfirm, isLoading }: DepositFormProps) {
     const [amountError, setAmountError] = useState("");
-    const { address } = useAccount();
     const [submitStatus, setSubmitStatus] = useState<"idle" | "processing" | "success" | "fail">("idle");
 
     const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -60,7 +59,7 @@ function DepositForm({ amount, setAmount, onConfirm, isLoading }: DepositFormPro
         try {
             await onConfirm();
             setSubmitStatus("success");
-        } catch (e) {
+        } catch {
             setSubmitStatus("fail");
         }
         setTimeout(() => setSubmitStatus("idle"), 2000);
@@ -117,7 +116,7 @@ function WithdrawForm({ recipient, setRecipient, amount, setAmount, onConfirm }:
     const { address } = useAccount();
     const [recipientError, setRecipientError] = useState("");
     const [expandedCards, setExpandedCards] = useState<{ [key: number]: boolean }>({});
-    const [requestWithdraws, setRequestWithdraws] = useState<any[]>([]);
+    const [requestWithdraws, setRequestWithdraws] = useState<Record<string, any>[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [submitStatus, setSubmitStatus] = useState<"idle" | "processing" | "success" | "fail">("idle");
 
@@ -133,6 +132,7 @@ function WithdrawForm({ recipient, setRecipient, amount, setAmount, onConfirm }:
 
     useEffect(() => {
         fetchRequestWithdraws();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [address]);
 
     const handleRecipientChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -149,7 +149,6 @@ function WithdrawForm({ recipient, setRecipient, amount, setAmount, onConfirm }:
 
     const handleConfirm = async () => {
         // Use current user's address if recipient is empty
-        const finalRecipient = recipient || address;
 
         // Only validate if recipient is provided
         if (recipient && !recipient.startsWith("0x")) {
@@ -164,7 +163,7 @@ function WithdrawForm({ recipient, setRecipient, amount, setAmount, onConfirm }:
         try {
             await onConfirm();
             setSubmitStatus("success");
-        } catch (e) {
+        } catch {
             setSubmitStatus("fail");
         }
         setTimeout(() => setSubmitStatus("idle"), 2000);
@@ -294,10 +293,8 @@ export default function Home() {
 
     const { address, account, isConnected } = useAccount();
     const { disconnect } = useDisconnect();
-    const { chain } = useNetwork();
 
     // const { abi, vault } = useGetABI();
-    const [abi, setAbi] = useState<Abi | undefined>();
     const [vault, setVault] = useState<Contract | null>(null);
     const [token, setToken] = useState<Contract | null>(null);
 
@@ -317,7 +314,6 @@ export default function Home() {
             const vaultContract = new Contract(vaultAbi, contractAddress, rpcProvider);
             vaultContract.connect(account);
 
-            setAbi(vaultAbi as Abi);
             setVault(vaultContract);
 
             const { abi: tokenAbi } = await rpcProvider.getClassAt(erc20_address);
@@ -328,7 +324,7 @@ export default function Home() {
         };
 
         fetchAbiAndContract();
-    }, [account]);
+    }, [account, contractAddress, erc20_address]);
 
     const [amount, setAmount] = useState("1");
     const [recipient, setRecipient] = useState("");
@@ -422,7 +418,6 @@ export default function Home() {
                 },
             });
             console.log("Transfer tx hash:", tx4.transaction_hash);
-            const txR = await rpcProvider.waitForTransaction(tx4.transaction_hash);
 
             setIsLoadingDeposit(false);
         } else {

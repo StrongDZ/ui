@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { axiosRequest } from "../hooks/axiosUtils";
 import { API_BASE_URL } from "../config";
 
-interface GameInfo {
+export interface GameInfo {
     _id: string;
     idGame: string;
     description: string;
@@ -54,7 +54,7 @@ const GameList: React.FC = () => {
             } else {
                 setError("Failed to fetch games");
             }
-        } catch (e) {
+        } catch {
             setError("Failed to fetch games");
         }
         setLoading(false);

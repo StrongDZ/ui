@@ -8,7 +8,6 @@ import { CONTRACT_ADDRESS, STARKNET_NODE_URL } from "../config";
 export function useGetABI() {
     const { account } = useAccount();
 
-    const [vault, setVault] = useState<Contract | null>(null);
     const [abi, setAbi] = useState<Abi | null>(null);
 
     useEffect(() => {
@@ -27,7 +26,6 @@ export function useGetABI() {
                 if (account) contract.connect(account);
                 console.log(contract);
 
-                setVault(contract);
                 setAbi(vaultAbi as Abi);
             } catch (e) {
                 console.error("Error loading contract", e);
@@ -37,5 +35,5 @@ export function useGetABI() {
         fetch();
     }, [account]);
 
-    return { abi, vault };
+    return { abi };
 }

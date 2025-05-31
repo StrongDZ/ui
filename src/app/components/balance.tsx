@@ -8,7 +8,7 @@ interface GetBalanceProps {
 }
 
 export default function Balance({ address }: GetBalanceProps) {
-    const { data, isLoading, isError, error } = useBalance({
+    const { data, isLoading, isError } = useBalance({
         address: (address as `0x${string}`) || undefined,
     });
 
