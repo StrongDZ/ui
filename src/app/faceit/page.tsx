@@ -107,6 +107,12 @@ export default function FundPage() {
                 //     nodeUrl: "https://starknet-sepolia.public.blastapi.io",
                 // });
 
+                const res = await axiosRequest({
+                    url: `${API_BASE_URL}/game/fund`,
+                    method: "POST",
+                    data: { idGame: gameId, amount: amount } as any,
+                });
+
                 const amountUint256 = uint256.bnToUint256(BigInt(amount));
                 const gameIdUint256 = uint256.bnToUint256(BigInt(gameId));
                 const multiCall = await account.execute([

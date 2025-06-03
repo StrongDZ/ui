@@ -40,16 +40,15 @@ const GameList: React.FC = () => {
 
             //filter data that contains "host" field
             if (res && res.status === 200) {
-                const filteredData = res?.data.data.filter((game: GameInfo) => !!game.host && game.host !== "");
-                setGames(filteredData || []);
-                setTotal(filteredData.length || 0);
+                setGames(res?.data.data || []);
+                setTotal(res?.data.total || 0);
                 // Filter after fetch for search
                 if (searchValue) {
                     setFilteredGames(
-                        (filteredData || []).filter((game: GameInfo) => game.gameName.toLowerCase().includes(searchValue.toLowerCase()))
+                        (res?.data.data || []).filter((game: GameInfo) => game.gameName.toLowerCase().includes(searchValue.toLowerCase()))
                     );
                 } else {
-                    setFilteredGames(filteredData || []);
+                    setFilteredGames(res?.data.data || []);
                 }
             } else {
                 setError("Failed to fetch games");
@@ -140,7 +139,7 @@ const GameList: React.FC = () => {
                                             <td className="px-3 py-2 font-mono text-xs">
                                                 {game.host.slice(0, 8)}...{game.host.slice(-4)}
                                             </td>
-                                            <td className="px-3 py-2">{game.totalFund} $</td>
+                                            <td className="px-3 py-2">{game.totalFund}</td>
                                             <td className="px-3 py-2">
                                                 {game.isFinished ? (
                                                     <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs">Finished</span>
@@ -163,7 +162,7 @@ const GameList: React.FC = () => {
                                                             <span className="font-semibold">Host:</span> {game.host}
                                                         </div>
                                                         <div>
-                                                            <span className="font-semibold">Fund:</span> {game.totalFund} $
+                                                            <span className="font-semibold">Fund:</span> {game.totalFund}
                                                         </div>
                                                         <div>
                                                             <span className="font-semibold">Status:</span> {game.isFinished ? "Finished" : "Ongoing"}

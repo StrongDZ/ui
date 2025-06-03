@@ -12,6 +12,7 @@ import Link from "next/link";
 import { axiosRequest } from "./hooks/axiosUtils";
 import { Skeleton } from "@radix-ui/themes";
 import { ExternalLink } from "lucide-react";
+import { API_BASE_URL, ERC20_CONTRACT, STARKNET_NODE_URL, TULIP_CONTRACT } from "./config";
 
 interface DepositFormProps {
     amount: string;
@@ -123,7 +124,7 @@ function WithdrawForm({ recipient, setRecipient, amount, setAmount, onConfirm }:
     const fetchRequestWithdraws = async () => {
         console.log("fetchRequestWithdraws");
         setIsLoading(true);
-        const url = "http://localhost:8000/user-requests/withdraw-requests";
+        const url = `${API_BASE_URL}/user-requests/withdraw-requests`;
         const params = { sender: address || "" };
         const data = await axiosRequest({ url, method: "GET", params });
         setRequestWithdraws(data?.data ?? []);
@@ -298,11 +299,11 @@ export default function Home() {
     const [vault, setVault] = useState<Contract | null>(null);
     const [token, setToken] = useState<Contract | null>(null);
 
-    const contractAddress = process.env.TULIP_CONTRACT || "0x0798905a42a75eef494ae3b5603848242ca3eec868303d67e4d5fab51b8717eb";
+    const contractAddress = TULIP_CONTRACT;
     console.log("Contract", contractAddress);
-    const erc20_address = process.env.ERC20_CONTRACT || "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d";
+    const erc20_address = ERC20_CONTRACT;
     const rpcProvider = new RpcProvider({
-        nodeUrl: "https://starknet-sepolia.public.blastapi.io",
+        nodeUrl: STARKNET_NODE_URL,
     });
 
     useEffect(() => {
@@ -395,10 +396,6 @@ export default function Home() {
             setIsLoadingDeposit(true);
 
             console.log("Vault: ", vault);
-            const rpcProvider = new RpcProvider({
-                nodeUrl: "https://starknet-sepolia.public.blastapi.io",
-            });
-
             const myCall4 = vault.populate("requestWithdraw", [amount, recipient]);
 
             const tx4 = await account.execute(myCall4, {
